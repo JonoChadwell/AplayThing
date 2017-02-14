@@ -31,8 +31,7 @@ public class PitchGenerator {
       return generatePitch(note.position, amplitude, octave);
    }
 
-   private Playable generatePitch(int note, double amplitudes[], int octave) {
-      
+   public Playable generatePitch(int note, double amplitudes[], int octave) {
       return new OvertonedWave(Math.pow(2, octave) * Math.pow(DIFF, note) * A, waveform, amplitudes);
    }
 }

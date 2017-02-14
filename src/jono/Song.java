@@ -45,4 +45,9 @@ public class Song {
             fadeRate));
    }
 
+   public void addSound(int pitch, double start, double end) {
+      notes.add(new FadedPlayable(gen.generatePitch(pitch % 12, baseVolume, pitch / 12), start, end - notePause,
+            fadeRate));
+   }
+
 }
