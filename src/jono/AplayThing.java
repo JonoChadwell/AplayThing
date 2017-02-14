@@ -1,24 +1,15 @@
 package jono;
-import java.util.Random;
 import java.util.function.Consumer;
-
-import javax.sound.sampled.*;
 
 import net.beadsproject.beads.core.AudioContext;
 import net.beadsproject.beads.ugens.Gain;
-import net.beadsproject.beads.ugens.Noise;
 
 public class AplayThing {
-   private static final int SAMPLE_RATE = 64000;
+   private static final int SAMPLE_RATE = 44100;
    
-   private static double LEN = 0.3;
-   private static double PAUSE = 0.05;
-   private static double FADE_RATE = 0.1;
-   private static long SEED = 0;
-   private static Note BASE_NOTE = Note.C;
    private static int OCTAVE = 0;
    private static double BASE_AMPLITUDE[] = {0.4};
-   private static Chord BASE_CHORD = Chord.MAJOR;
+   private static Waveform WAVEFORM = Waveform.SINE;
    
    private static Player player;
    
@@ -30,14 +21,12 @@ public class AplayThing {
       parseArgs(args);
       player = new Player(ac);
       
+      PitchGenerator pg = new PitchGenerator(BASE_AMPLITUDE, OCTAVE, WAVEFORM);
       
-      Random rand = new Random(SEED);
+      Song s = littleLamb(pg);
       
-      for (int i = 0; i < 100000; i++) {
-         addNote(BASE_CHORD.getChord()[rand.nextInt(8)] + BASE_NOTE.position + 12 * OCTAVE, i);
-      }
+      s.populatePlayer(player);
       
-      new PlayableViewer(NoteGenerator.getNote(0, BASE_AMPLITUDE), 1/80000.0);
       Gain g = new Gain(ac, 1, 0.1f);
       g.addInput(player);
       ac.out.addInput(g);
@@ -48,24 +37,24 @@ public class AplayThing {
       for (String s : args) {
          if (s.contains("help") || s.equals("-h") || s.equals("?") ) {
             System.out.println("Options:");
-            System.out.println("--seed= (-s=) seed for music");
-            System.out.println("--length= (-l=) note length (seconds)");
-            System.out.println("--pause= (-p=) break between notes");
-            System.out.println("--fade= (-f=) fade speed");
-            System.out.println("--node= (-n=) base note");
-            System.out.println("--chord= (-c=) chord type");
+//            System.out.println("--seed= (-s=) seed for music");
+//            System.out.println("--length= (-l=) note length (seconds)");
+//            System.out.println("--pause= (-p=) break between notes");
+//            System.out.println("--fade= (-f=) fade speed");
+//            System.out.println("--node= (-n=) base note");
+//            System.out.println("--chord= (-c=) chord type");
             System.out.println("--octave= (-o=) octave shift");
             System.out.println("--wave= (-w=) waveform (SINE, SQUARE, SAWTOOTH, TRIANGLE, BACKSAW)");
             System.out.println("--amplitude= (-a=) list of amplitudes for overtones");
          }
-         ifStarts((str) -> SEED = str.hashCode(), s, "-s=", "--seed=");
-         ifStarts((str) -> LEN = Double.valueOf(str), s, "-l=", "--length=");
-         ifStarts((str) -> PAUSE = Double.valueOf(str), s, "-p=", "--pause=");
-         ifStarts((str) -> FADE_RATE = Double.valueOf(str), s, "-f=", "--fade=");
-         ifStarts((str) -> BASE_NOTE = Note.valueOf(str), s, "-n=", "--note=");
-         ifStarts((str) -> BASE_CHORD = Chord.valueOf(str), s, "-c=", "--chord=");
+//         ifStarts((str) -> SEED = str.hashCode(), s, "-s=", "--seed=");
+//         ifStarts((str) -> LEN = Double.valueOf(str), s, "-l=", "--length=");
+//         ifStarts((str) -> PAUSE = Double.valueOf(str), s, "-p=", "--pause=");
+//         ifStarts((str) -> FADE_RATE = Double.valueOf(str), s, "-f=", "--fade=");
+//         ifStarts((str) -> BASE_NOTE = Pitch.valueOf(str), s, "-n=", "--note=");
+//         ifStarts((str) -> BASE_CHORD = Chord.valueOf(str), s, "-c=", "--chord=");
          ifStarts((str) -> OCTAVE = Integer.valueOf(str), s, "-o=", "--octave=");
-         ifStarts((str) -> NoteGenerator.DEFAULT_WAVEFORM = Waveform.valueOf(str), s, "-w=", "--wave=");
+         ifStarts((str) -> WAVEFORM = Waveform.valueOf(str), s, "-w=", "--wave=");
          ifStarts((str) -> setAmplitude(str), s, "-a=", "--amplitude=");
       }
    }
@@ -90,98 +79,86 @@ public class AplayThing {
       }
    }
    
-   private static void addHalf(Note n, double pos) {
-      player.addSound(new FadedPlayable(NoteGenerator.getNote(n, BASE_AMPLITUDE),pos * LEN, (pos + 0.5) * LEN - PAUSE, FADE_RATE));
+   // Mary Had a Little Lamb
+   private static Song littleLamb(PitchGenerator pg) {
+      Song s = new Song(pg);
+      
+      s.addNote(Pitch.E, 0);
+      s.addNote(Pitch.D, 1);
+      s.addNote(Pitch.C, 2);
+      s.addNote(Pitch.D, 3);
+      s.addNote(Pitch.E, 4);
+      s.addNote(Pitch.E, 5);
+      s.addDouble(Pitch.E, 6);
+      
+      s.addNote(Pitch.D, 8);
+      s.addNote(Pitch.D, 9);
+      s.addDouble(Pitch.D, 10);
+      s.addNote(Pitch.E, 12);
+      s.addNote(Pitch.G, 13);
+      s.addDouble(Pitch.G, 14);
+      
+      s.addNote(Pitch.E, 16);
+      s.addNote(Pitch.D, 17);
+      s.addNote(Pitch.C, 18);
+      s.addNote(Pitch.D, 19);
+      s.addNote(Pitch.E, 20);
+      s.addNote(Pitch.E, 21);
+      s.addNote(Pitch.E, 22);
+      s.addNote(Pitch.E, 23);
+      
+      s.addNote(Pitch.D, 24);
+      s.addNote(Pitch.D, 25);
+      s.addNote(Pitch.E, 26);
+      s.addNote(Pitch.D, 27);
+      s.addQuad(Pitch.C, 28);
+      
+      return s;
    }
    
-   private static void addNote(Note n, double pos) {
-      player.addSound(new FadedPlayable(NoteGenerator.getNote(n, BASE_AMPLITUDE),pos * LEN, (pos + 1) * LEN - PAUSE, FADE_RATE));
-   }
-   
-   private static void addNote(int n, double pos) {
-      player.addSound(new FadedPlayable(NoteGenerator.getNote(n, BASE_AMPLITUDE),pos * LEN, (pos + 1) * LEN - PAUSE, FADE_RATE));
-   }
-   
-   private static void addDouble(Note n, double pos) {
-      player.addSound(new FadedPlayable(NoteGenerator.getNote(n, BASE_AMPLITUDE),pos * LEN, (pos + 2) * LEN - PAUSE, FADE_RATE));
-   }
-   
-   private static void addQuad(Note n, double pos) {
-      player.addSound(new FadedPlayable(NoteGenerator.getNote(n, BASE_AMPLITUDE),pos * LEN, (pos + 4) * LEN - PAUSE, FADE_RATE));
-   }
-   
-   private static void littleLamb() {
-      // Mary Had a Little Lamb
-      addNote(Note.E, 0);
-      addNote(Note.D, 1);
-      addNote(Note.C, 2);
-      addNote(Note.D, 3);
-      addNote(Note.E, 4);
-      addNote(Note.E, 5);
-      addDouble(Note.E, 6);
+   // The Saints go marching in
+   private static Song saints(PitchGenerator pg) {
+      Song s = new Song(pg);
+
+      s.addNote(Pitch.C , 0);
+      s.addNote(Pitch.E , 1);
+      s.addNote(Pitch.F , 2);
+      s.addNote(Pitch.G , 3);
       
-      addNote(Note.D, 8);
-      addNote(Note.D, 9);
-      addDouble(Note.D, 10);
-      addNote(Note.E, 12);
-      addNote(Note.G, 13);
-      addDouble(Note.G, 14);
+      s.addNote(Pitch.C , 6);
+      s.addNote(Pitch.E , 7);
+      s.addNote(Pitch.F , 8);
+      s.addNote(Pitch.G , 9);
       
-      addNote(Note.E, 16);
-      addNote(Note.D, 17);
-      addNote(Note.C, 18);
-      addNote(Note.D, 19);
-      addNote(Note.E, 20);
-      addNote(Note.E, 21);
-      addNote(Note.E, 22);
-      addNote(Note.E, 23);
+      s.addNote(Pitch.C , 12);
+      s.addNote(Pitch.E , 13);
+      s.addNote(Pitch.F , 14);
       
-      addNote(Note.D, 24);
-      addNote(Note.D, 25);
-      addNote(Note.E, 26);
-      addNote(Note.D, 27);
-      addQuad(Note.C, 28);
-   }
-   
-   private static void saints() {
-      // The Saints go marching in
-      addNote(Note.C , 0);
-      addNote(Note.E , 1);
-      addNote(Note.F , 2);
-      addNote(Note.G , 3);
+      s.addNote(Pitch.G , 15);
+      s.addNote(Pitch.E , 17);
+      s.addNote(Pitch.C , 19);
+      s.addNote(Pitch.E , 21);
+      s.addNote(Pitch.D , 23);
       
-      addNote(Note.C , 6);
-      addNote(Note.E , 7);
-      addNote(Note.F , 8);
-      addNote(Note.G , 9);
+      s.addNote(Pitch.E , 26);
+      s.addNote(Pitch.E , 27);
+      s.addNote(Pitch.D , 28);
+      s.addNote(Pitch.C , 29);
+      s.addNote(Pitch.C , 31);
+      s.addNote(Pitch.E , 32);
+      s.addNote(Pitch.G , 34);
+      s.addNote(Pitch.G , 35);
+      s.addNote(Pitch.G , 36);
+      s.addNote(Pitch.F , 37);
       
-      addNote(Note.C , 12);
-      addNote(Note.E , 13);
-      addNote(Note.F , 14);
+      s.addNote(Pitch.E , 40);
+      s.addNote(Pitch.F , 41);
+      s.addNote(Pitch.G , 43);
+      s.addNote(Pitch.E , 45);
+      s.addNote(Pitch.C , 47);
+      s.addNote(Pitch.D , 49);
+      s.addNote(Pitch.C , 51);
       
-      addNote(Note.G , 15);
-      addNote(Note.E , 17);
-      addNote(Note.C , 19);
-      addNote(Note.E , 21);
-      addNote(Note.D , 23);
-      
-      addNote(Note.E , 26);
-      addNote(Note.E , 27);
-      addNote(Note.D , 28);
-      addNote(Note.C , 29);
-      addNote(Note.C , 31);
-      addNote(Note.E , 32);
-      addNote(Note.G , 34);
-      addNote(Note.G , 35);
-      addNote(Note.G , 36);
-      addNote(Note.F , 37);
-      
-      addNote(Note.E , 40);
-      addNote(Note.F , 41);
-      addNote(Note.G , 43);
-      addNote(Note.E , 45);
-      addNote(Note.C , 47);
-      addNote(Note.D , 49);
-      addNote(Note.C , 51);
+      return s;
    }
 }

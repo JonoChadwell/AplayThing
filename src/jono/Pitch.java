@@ -1,6 +1,6 @@
 package jono;
 
-public enum Note {
+public enum Pitch {
    Aflat(-1),
    A(0),
    Asharp(1),
@@ -25,7 +25,7 @@ public enum Note {
    
    public int position;
    
-   Note(int position) {
+   Pitch(int position) {
       this.position = position;
    }
 }
